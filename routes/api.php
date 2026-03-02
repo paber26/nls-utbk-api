@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/monitoring-tryout', [MonitoringTryoutController::class, 'index']);
     Route::get('/monitoring-tryout/{id}', [MonitoringTryoutController::class, 'show']);
+    Route::post('/monitoring-tryout/{attemptId}/force-finish', [MonitoringTryoutController::class, 'forceFinish']);
     
     Route::get('/tryout/{id}/soal', [TryoutSoalController::class, 'index']);
     Route::get('/tryout/{id}/soal-detail', [TryoutSoalController::class, 'indexDetail']);

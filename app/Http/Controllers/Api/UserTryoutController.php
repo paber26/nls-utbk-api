@@ -515,7 +515,7 @@ class UserTryoutController extends Controller
         ]);
     }
 
-    private function hitungNilai($attempt)
+    public function hitungNilai($attempt)
     {
         $totalPoin = 0;
         
