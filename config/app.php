@@ -55,6 +55,8 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
     // URL frontend (admin / web)
     'frontend_url' => env('FRONTEND_URL'),
+    'frontend_user_url' => env('FRONTEND_USER_URL'),
+    'frontend_admin_url' => env('FRONTEND_ADMIN_URL'),
 
     /*
     |--------------------------------------------------------------------------

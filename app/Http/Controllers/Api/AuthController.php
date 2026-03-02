@@ -53,9 +53,9 @@ class AuthController extends Controller
         $token = $user->createToken('google-token')->plainTextToken;
         
         if ($user->role === 'admin') {
-            $frontendUrl = env('FRONTEND_ADMIN_URL') . '/oauth/callback';
+            $frontendUrl = config('app.frontend_admin_url') . '/oauth/callback';
         } else {
-            $frontendUrl = env('FRONTEND_USER_URL') . '/oauth/callback';
+            $frontendUrl = config('app.frontend_user_url') . '/oauth/callback';
         }
 
         return redirect()->away(
