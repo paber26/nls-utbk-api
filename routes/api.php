@@ -79,6 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/peserta', [PesertaController::class, 'index']);
     Route::get('/peserta/detail/{id}', [PesertaController::class, 'show']);
     Route::post('/peserta', [PesertaController::class, 'store']);
+    Route::patch('/peserta/toggle-event/{id}', [PesertaController::class, 'toggleEvent']);
+    Route::get('/peserta/{id}/riwayat', [PesertaController::class, 'riwayatTryout']);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
 
     Route::get('/banksoal', [BankSoalController::class, 'index']);

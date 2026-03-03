@@ -95,7 +95,6 @@ class PesertaController extends Controller
             'sekolah',
             'attempts.tryout'
         ])->findOrFail($id);
-        return $peserta;
 
         return response()->json([
             'id' => $peserta->id,
@@ -107,6 +106,7 @@ class PesertaController extends Controller
             'kota' => $peserta->kota,
             'kecamatan' => $peserta->kecamatan,
             'role' => $peserta->role,
+            'is_event_registered' => $peserta->is_event_registered,
             'sekolah' => $peserta->sekolah ? [
                 'id' => $peserta->sekolah->id,
                 'nama' => $peserta->sekolah->nama,
@@ -151,5 +151,49 @@ class PesertaController extends Controller
             'message' => 'Peserta berhasil ditambahkan',
             'data' => $user
         ], 201);
+    }
+    public function toggleEvent($id)
+    {
+        $user = User::findOrFail($id);
+
+        // Toggle nilai is_event_registered (0 ↔ 1)
+        $user->is_event_registered = $user->is_event_registered ? 0 : 1;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status event berhasil diperbarui',
+            'is_event_registered' => $user->is_event_registered
+        ]);
+    }
+
+    public function riwayatTryout($id)
+    {
+        $user = User::findOrFail($id);
+
+        $attempts = $user->attempts()
+            ->with('tryout')
+            // ->where('status', 'submitted') // hanya yang sudah selesai
+            ->orderByDesc('selesai')       // terbaru dulu
+            ->get();
+
+        $riwayat = $attempts->map(function ($attempt) {
+            return [
+                'attempt_id'  => $attempt->id,
+                'tryout_id'   => $attempt->tryout_id,
+                'nama_tryout' => optional($attempt->tryout)->paket ?? '-',
+                'status'      => $attempt->status,
+                'nilai'       => $attempt->nilai ?? 0,
+                'mulai'       => $attempt->mulai,
+                'selesai'     => $attempt->selesai,
+            ];
+        });
+
+        return response()->json([
+            'user_id'      => $user->id,
+            'nama_peserta' => $user->nama_lengkap ?? $user->name,
+            'total_tryout' => $riwayat->count(),
+            'riwayat'      => $riwayat,
+        ]);
     }
 }
