@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/monitoring-tryout', [MonitoringTryoutController::class, 'index']);
     Route::get('/monitoring-tryout/{id}', [MonitoringTryoutController::class, 'show']);
+    Route::get('/monitoring-tryout/{tryoutId}/peserta/{participantId}/hasil', [MonitoringTryoutController::class, 'hasilPeserta']);
     Route::post('/monitoring-tryout/{attemptId}/force-finish', [MonitoringTryoutController::class, 'forceFinish']);
     Route::get('/leaderboard/tryouts', [LeaderboardController::class, 'tryouts']);
     Route::get('/leaderboard/{tryoutId}', [LeaderboardController::class, 'leaderboard']);

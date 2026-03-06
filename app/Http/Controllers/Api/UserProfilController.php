@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class UserProfilController extends Controller
@@ -25,6 +26,7 @@ class UserProfilController extends Controller
             'kecamatan'   => $request->kecamatan,
             'whatsapp'     => $request->whatsapp,
             'minat'        => $request->minat,
+            'password'     => Hash::make($request->password),
         ]);
 
         return response()->json([

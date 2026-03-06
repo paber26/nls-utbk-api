@@ -106,11 +106,21 @@ class UserTryoutController extends Controller
         $user = Auth::user();
 
         $tryout = Tryout::where('status', 'active')->findOrFail($id);
-        
+
         $attempt = Attempt::where('tryout_id', $tryout->id)
             ->where('user_id', $user->id)
             ->where('status', 'ongoing')
-            ->firstOrFail();
+            ->first();
+
+        // Jika tidak ada attempt aktif (sudah submit atau belum mulai)
+        if (! $attempt) {
+            return response()->json([
+                'mulai'         => null,
+                'durasi_menit'  => $tryout->durasi_menit ?? 0,
+                'waktu_selesai' => null,
+                'sisa_detik'    => 0,
+            ]);
+        }
 
         $durasiMenit = $tryout->durasi_menit ?? 0;
 
