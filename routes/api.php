@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\UserTryoutController;
 use App\Http\Controllers\Api\PesertaController;
 // use app/Http/Controllers/api/AuthController.php
 use Illuminate\Http\Request;
-use App\Models\Mapel;
+use App\Models\Komponen;
 
 Route::get('/ping', function () {
     return response()->json([
@@ -72,7 +72,11 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('banksoal', BankSoalController::class);
     Route::get('/mapel', function () {
-        return Mapel::select('id', 'nama', 'tingkat')->orderBy('nama')->get();
+        return Komponen::select('id', 'kode', 'nama_komponen', 'mata_uji')->orderBy('id')->get();
+    });
+
+    Route::get('/komponen', function () {
+        return Komponen::select('id', 'kode', 'nama_komponen', 'mata_uji')->orderBy('id')->get();
     });
 
     Route::get('/users', [UserController::class, 'index']);
@@ -82,6 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/peserta/{id}/update-password', [PesertaController::class, 'updatePassword']);
     Route::patch('/peserta/toggle-event/{id}', [PesertaController::class, 'toggleEvent']);
     Route::get('/peserta/{id}/riwayat', [PesertaController::class, 'riwayatTryout']);
+    Route::delete('/peserta/{id}', [PesertaController::class, 'destroy']);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
 
     Route::get('/banksoal', [BankSoalController::class, 'index']);

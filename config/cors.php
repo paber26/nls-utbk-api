@@ -8,6 +8,7 @@ return [
     'allowed_origins' => [
         'https://kuy.next-level-study.com',
         'http://localhost:5173',
+        'http://localhost:5174',
         'https://osn.next-level-study.com',
     ],
 

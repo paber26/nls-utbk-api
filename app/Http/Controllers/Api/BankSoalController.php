@@ -14,12 +14,12 @@ class BankSoalController extends Controller
     // 🔹 GET /api/bank-soal
     public function index(Request $request)
     {
-        $query = BankSoal::with(['mapel', 'pembuat']);
+        $query = BankSoal::with(['komponen', 'pembuat']);
 
-        // 🔍 Filter by mapel (by name)
-        if ($request->filled('mapel')) {
-            $query->whereHas('mapel', function ($q) use ($request) {
-                $q->where('nama', $request->mapel);
+        // 🔍 Filter by komponen (by name)
+        if ($request->filled('komponen')) {
+            $query->whereHas('komponen', function ($q) use ($request) {
+                $q->where('nama_komponen', $request->komponen);
             });
         }
 
@@ -42,7 +42,7 @@ class BankSoalController extends Controller
             return [
                 'id' => $item->id,
                 'pertanyaan' => $item->pertanyaan,
-                'mapel' => $item->mapel->nama ?? '-',
+                'komponen' => $item->komponen->nama_komponen ?? '-',
                 'pembuat' => $item->pembuat->name ?? '-',
                 'jumlah_terpakai' => $jumlahTerpakai,
             ];
@@ -59,16 +59,16 @@ class BankSoalController extends Controller
     public function listForTryout(Request $request)
     {
         $query = BankSoal::query()
-            ->with('mapel:id,nama');
+            ->with('komponen:id,nama_komponen');
 
         // 🔍 filter keyword soal
         if ($request->filled('q')) {
             $query->where('pertanyaan', 'like', '%' . $request->q . '%');
         }
 
-        // 🔍 filter mapel
-        if ($request->filled('mapel_id')) {
-            $query->where('mapel_id', $request->mapel_id);
+        // 🔍 filter komponen
+        if ($request->filled('komponen_id')) {
+            $query->where('komponen_id', $request->komponen_id);
         }
 
         return response()->json(
@@ -76,8 +76,8 @@ class BankSoalController extends Controller
                 return [
                     'id'          => $soal->id,
                     'pertanyaan'  => $soal->pertanyaan,
-                    'mapel_id'    => $soal->mapel_id,
-                    'mapel_nama'  => $soal->mapel?->nama,
+                    'komponen_id'    => $soal->komponen_id,
+                    'komponen_nama'  => $soal->komponen?->nama_komponen,
                 ];
             })
         );
@@ -87,12 +87,50 @@ class BankSoalController extends Controller
     // 🔹 POST /api/bank-soal
     public function store(Request $request)
     {
+        // Normalize komponen payloads:
+        // - frontend may send `komponen` object, numeric id, or JSON string
+        // - older clients may still send `mapel_id`
+        if (! $request->filled('komponen_id')) {
+            if ($request->filled('komponen')) {
+                $komponen = $request->komponen;
+
+                if (is_array($komponen) && isset($komponen['id'])) {
+                    $request->merge(['komponen_id' => $komponen['id']]);
+                } elseif (is_object($komponen) && isset($komponen->id)) {
+                    $request->merge(['komponen_id' => $komponen->id]);
+                } elseif (is_numeric($komponen)) {
+                    $request->merge(['komponen_id' => $komponen]);
+                } elseif (is_string($komponen)) {
+                    $decoded = json_decode($komponen, true);
+                    if (is_array($decoded) && isset($decoded['id'])) {
+                        $request->merge(['komponen_id' => $decoded['id']]);
+                    } elseif (ctype_digit($komponen)) {
+                        $request->merge(['komponen_id' => $komponen]);
+                    }
+                }
+            } elseif ($request->filled('mapel_id')) {
+                $request->merge(['komponen_id' => $request->mapel_id]);
+            }
+        }
+
+        $request->validate([
+            'komponen_id' => 'required|exists:komponen,id',
+            'tipe' => 'required|in:pg,pg_majemuk,isian,pg_kompleks',
+            'pertanyaan' => 'required|string',
+            'pembahasan' => 'nullable|string',
+            'jawaban_isian' => 'nullable|string',
+            'opsi_jawaban' => 'required_if:tipe,pg,pg_majemuk|array',
+            'opsi_jawaban.*.text' => 'required_if:tipe,pg,pg_majemuk|string',
+            'opsi_jawaban.*.poin' => 'nullable|numeric',
+            'opsi_jawaban.*.is_correct' => 'nullable|boolean',
+        ]);
+
         DB::beginTransaction();
 
         try {
             // 1️⃣ Simpan soal utama
             $soal = BankSoal::create([
-                'mapel_id'   => $request->mapel_id,
+                'komponen_id'   => $request->komponen_id,
                 'tipe'       => $request->tipe,
                 'pertanyaan' => $request->pertanyaan,
                 'pembahasan' => $request->pembahasan,
@@ -166,13 +204,13 @@ class BankSoalController extends Controller
     // 🔹 GET /api/bank-soal/{id}
     public function show($id)
     {
-        $bankSoal = BankSoal::with(['mapel', 'opsiJawaban', 'pernyataanKompleks'])
+        $bankSoal = BankSoal::with(['komponen', 'opsiJawaban', 'pernyataanKompleks'])
             ->findOrFail($id);
 
         return response()->json([
             'id' => $bankSoal->id, 
-            'mapel_id' => $bankSoal->mapel_id,
-            'mapel_nama' => $bankSoal->mapel?->nama,
+            'komponen_id' => $bankSoal->komponen_id,
+            'komponen_nama' => $bankSoal->komponen?->nama_komponen,
             'tipe' => $bankSoal->tipe,
             'pertanyaan' => $bankSoal->pertanyaan,
             'pembahasan' => $bankSoal->pembahasan,
@@ -198,8 +236,15 @@ class BankSoalController extends Controller
     {
         $bankSoal = BankSoal::findOrFail($id);
 
+        // Accept payload with `komponen` object (from frontend) or `komponen_id`.
+        if ($request->filled('komponen') && is_array($request->komponen) && isset($request->komponen['id'])) {
+            $request->merge(['komponen_id' => $request->komponen['id']]);
+        } elseif ($request->filled('komponen') && is_object($request->komponen) && isset($request->komponen->id)) {
+            $request->merge(['komponen_id' => $request->komponen->id]);
+        }
+
         $request->validate([
-            'mapel_id' => 'required|exists:mapel,id',
+            'komponen_id' => 'required|exists:komponen,id',
             'tipe' => 'required|in:pg,pg_majemuk,isian,pg_kompleks',
             'pertanyaan' => 'required|string',
             'pembahasan' => 'nullable|string',
@@ -217,7 +262,7 @@ class BankSoalController extends Controller
 
             // update soal utama
             $bankSoal->update([
-                'mapel_id' => $request->mapel_id,
+                'komponen_id' => $request->komponen_id,
                 'tipe' => $request->tipe,
                 'pertanyaan' => $request->pertanyaan,
                 'pembahasan' => $request->pembahasan,

@@ -25,7 +25,7 @@ class UserTryoutController extends Controller
                 'attempts' => function ($q) use ($user) {
                     $q->where('user_id', $user->id);
                 },
-                'mapel'
+                'komponen'
             ])
             ->get()
             ->map(function ($tryout) {
@@ -40,8 +40,8 @@ class UserTryoutController extends Controller
                 return [
                     'id' => $tryout->id,
                     'nama' => $tryout->paket ?? $tryout->nama,
-                    'jenjang' => $tryout->mapel->tingkat ?? '-',
-                    'mapel' => $tryout->mapel->nama ?? '-',
+                    'jenjang' => $tryout->komponen->mata_uji ?? '-',
+                    'komponen' => $tryout->komponen->nama_komponen ?? '-',
                     'jumlah_soal' => $tryout->questions_count ?? 0,
                     'durasi' => $tryout->durasi_menit ?? $tryout->durasi,
                     'status' => $status,
@@ -57,15 +57,15 @@ class UserTryoutController extends Controller
     {
         $tryout = Tryout::where('status', 'active')
             ->withCount('questions')
-            ->with('mapel')
+            ->with('komponen')
             ->findOrFail($id);
 
         return response()->json([
             'data' => [
                 'id' => $tryout->id,
                 'nama' => $tryout->paket ?? $tryout->nama,
-                'jenjang' => $tryout->mapel->tingkat ?? '-',
-                'mapel' => $tryout->mapel->nama ?? '-',
+                'jenjang' => $tryout->komponen->mata_uji ?? '-',
+                'komponen' => $tryout->komponen->nama_komponen ?? '-',
                 'jumlah_soal' => $tryout->questions_count ?? 0,
                 'durasi' => $tryout->durasi_menit ?? $tryout->durasi,
                 'mulai' => $tryout->mulai,

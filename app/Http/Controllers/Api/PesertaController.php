@@ -234,4 +234,24 @@ class PesertaController extends Controller
             'riwayat'      => $riwayat,
         ]);
     }
+
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+
+        // Pastikan user adalah peserta
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya peserta yang dapat dihapus melalui endpoint ini'
+            ], 403);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Peserta berhasil dihapus'
+        ]);
+    }
 }

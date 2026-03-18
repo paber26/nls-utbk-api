@@ -10,7 +10,6 @@ class Tryout extends Model
 
     protected $fillable = [
         'paket',
-        'mapel_id',
         'durasi_menit',
         'mulai',
         'selesai',
@@ -27,9 +26,11 @@ class Tryout extends Model
         'show_pembahasan' => 'boolean',
     ];
 
-    public function mapel()
+    public function komponen()
     {
-        return $this->belongsTo(Mapel::class, 'mapel_id');
+        return $this->belongsToMany(Komponen::class, 'tryout_komponen', 'tryout_id', 'komponen_id')
+                    ->withPivot('urutan')
+                    ->orderBy('tryout_komponen.urutan');
     }
 
     public function pembuat()

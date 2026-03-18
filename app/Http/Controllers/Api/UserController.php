@@ -12,18 +12,26 @@ class UserController extends Controller
     /**
      * Ambil semua user
      */
-    public function index()
+    public function index(Request $request)
     {
-        // return Auth::user()->role !== 'admin';
-
         // Optional: hanya admin yang boleh akses
         if (Auth::user()->role !== 'admin') {
             return response()->json("tidak dikenali");
         }
 
-        $users = User::select('id', 'name', 'email', 'role')
-            ->orderBy('id', 'desc')
-            ->get();
+        $query = User::select('id', 'name', 'email', 'role');
+
+        // Search by name/email when query is at least 3 characters
+        if ($request->filled('search')) {
+            $search = trim($request->get('search'));
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('id', 'desc')->get();
 
         return response()->json($users);
     }
