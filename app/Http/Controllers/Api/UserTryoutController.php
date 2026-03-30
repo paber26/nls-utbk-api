@@ -37,11 +37,13 @@ class UserTryoutController extends Controller
                     $status = $attempt->status;
                 }
 
+                $komponenFirst = $tryout->komponen->first();
+
                 return [
                     'id' => $tryout->id,
                     'nama' => $tryout->paket ?? $tryout->nama,
-                    'jenjang' => $tryout->komponen->mata_uji ?? '-',
-                    'komponen' => $tryout->komponen->nama_komponen ?? '-',
+                    'jenjang' => $komponenFirst->mata_uji ?? '-',
+                    'komponen' => $tryout->komponen->pluck('nama_komponen')->join(', ') ?: '-',
                     'jumlah_soal' => $tryout->questions_count ?? 0,
                     'durasi' => $tryout->durasi_menit ?? $tryout->durasi,
                     'status' => $status,
@@ -60,12 +62,14 @@ class UserTryoutController extends Controller
             ->with('komponen')
             ->findOrFail($id);
 
+        $komponenFirst = $tryout->komponen->first();
+
         return response()->json([
             'data' => [
                 'id' => $tryout->id,
                 'nama' => $tryout->paket ?? $tryout->nama,
-                'jenjang' => $tryout->komponen->mata_uji ?? '-',
-                'komponen' => $tryout->komponen->nama_komponen ?? '-',
+                'jenjang' => $komponenFirst->mata_uji ?? '-',
+                'komponen' => $tryout->komponen->pluck('nama_komponen')->join(', ') ?: '-',
                 'jumlah_soal' => $tryout->questions_count ?? 0,
                 'durasi' => $tryout->durasi_menit ?? $tryout->durasi,
                 'mulai' => $tryout->mulai,
