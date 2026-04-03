@@ -311,6 +311,7 @@ class BankSoalController extends Controller
 
             // jika PG Kompleks → simpan pernyataan baru
             if ($request->tipe === 'pg_kompleks') {
+                $bankSoal->pernyataanKompleks()->delete();
                 OpsiJawaban::where('soal_id', $bankSoal->id)->delete();
 
                 foreach ($request->pernyataan as $index => $item) {
