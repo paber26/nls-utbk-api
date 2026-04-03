@@ -277,7 +277,7 @@ class UserTryoutController extends Controller
             ->first();
 
         if (!$activeKomponen || $activeKomponen->komponen_id !== $bankSoal->komponen_id) {
-            return response()->json(['message' => 'Soal ini tidak berada pada subtes yang sedang aktif'], 400);
+            return response()->json(['message' => 'Soal ini tidak berada pada komponen yang sedang aktif'], 400);
         }
 
         $isCorrect = null;
@@ -745,7 +745,7 @@ class UserTryoutController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Lanjut ke subtes berikutnya',
+                'message' => 'Lanjut ke komponen berikutnya',
                 'komponen_id' => $nextKomponen->id,
                 'is_finished' => false,
             ]);
