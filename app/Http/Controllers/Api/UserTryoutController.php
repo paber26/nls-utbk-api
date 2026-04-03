@@ -536,6 +536,8 @@ class UserTryoutController extends Controller
             ];
         }
 
+        $skorKomponen = $this->hitungNilai($attempt);
+
         return response()->json([
             'paket' => $attempt->tryout->paket,
             'durasi_menit' => $attempt->tryout->durasi_menit,
@@ -545,6 +547,7 @@ class UserTryoutController extends Controller
             'kosong' => $kosong,
             'navigasi' => $navigasi,
             'nilai_irt' => round($attempt->nilai, 1),
+            'skor_komponen' => $skorKomponen,
             // flag untuk frontend menentukan apakah pembahasan dapat dimuat
             'show_pembahasan' => (bool) $attempt->tryout->show_pembahasan,
         ]);
@@ -882,6 +885,8 @@ class UserTryoutController extends Controller
         // --- Konversi ke Skala Dasar SNBT per Komponen ---
         $totalSemuaSkala = 0;
         $jumlahKomponen = count($maxSkor);
+        $breakdown = [];
+        $komponens = \App\Models\Komponen::all()->keyBy('id');
 
         foreach ($maxSkor as $kId => $max) {
             $peserta = $skorPeserta[$kId] ?? 0;
@@ -889,13 +894,18 @@ class UserTryoutController extends Controller
             if ($max > 0) {
                 $ratio = min($peserta / $max, 1.0);
                 $ratio = max($ratio, 0.0);
-                // Rumus: 500 + ((Skor Mentah Peserta / Max Skor Mentah Komponen) * 450)
-                $skalaIRT = 500 + ($ratio * 450);
+                // Rumus: 200 + ((Skor Mentah Peserta / Max Skor Mentah Komponen) * 750)
+                $skalaIRT = 200 + ($ratio * 750);
             } else {
-                $skalaIRT = 500;
+                $skalaIRT = 200;
             }
 
             $totalSemuaSkala += $skalaIRT;
+            $namaKomponen = isset($komponens[$kId]) ? $komponens[$kId]->nama_komponen : 'Lainnya';
+            $breakdown[] = [
+                'nama' => $namaKomponen,
+                'skor' => round($skalaIRT, 1)
+            ];
         }
 
         // Nilai akhir attempt adalah rata-rata skala komponen
@@ -904,6 +914,8 @@ class UserTryoutController extends Controller
         $attempt->update([
             'nilai' => round($nilaiAkhir, 2)
         ]);
+
+        return $breakdown;
     }
 
     /* helper methods borrowed from MonitoringTryoutController */
