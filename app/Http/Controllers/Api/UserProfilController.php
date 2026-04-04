@@ -15,23 +15,44 @@ class UserProfilController extends Controller
      */
     public function store(Request $request)
     {
-        $email = Auth::user()->email;
-
-        User::where('email', $email)->update([
+        $user = Auth::user();
+        
+        $data = [
             'nama_lengkap' => $request->nama_lengkap,
             'sekolah_id'   => $request->sekolah_id,
             'kelas'        => $request->kelas,
             'provinsi'     => $request->provinsi,
             'kota'         => $request->kota,
-            'kecamatan'   => $request->kecamatan,
+            'kecamatan'    => $request->kecamatan,
             'whatsapp'     => $request->whatsapp,
             'minat'        => $request->minat,
-            'password'     => Hash::make($request->password),
-        ]);
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        // Cek apakah profil sudah lengkap untuk aktivasi
+        $isProfilLengkap = 
+            !empty($data['nama_lengkap']) &&
+            !empty($data['sekolah_id']) &&
+            !empty($data['kelas']) &&
+            !empty($data['provinsi']) &&
+            !empty($data['kota']) &&
+            !empty($data['kecamatan']) &&
+            !empty($data['whatsapp']) &&
+            !empty($data['minat']) && count($data['minat']) > 0;
+
+        if ($isProfilLengkap) {
+            $data['is_event_registered'] = 1;
+        }
+
+        $user->update($data);
 
         return response()->json([
             'success' => true,
-            'message' => 'Profil peserta berhasil disimpan'
+            'message' => 'Profil peserta berhasil disimpan',
+            'is_event_registered' => $user->is_event_registered
         ]);
     }
 
