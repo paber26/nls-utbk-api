@@ -14,6 +14,7 @@ class Tryout extends Model
         'mulai',
         'selesai',
         'status',
+        'access_key',
         'created_by',
         'ketentuan_khusus',
         'pesan_selesai',

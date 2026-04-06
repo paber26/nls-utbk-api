@@ -38,6 +38,7 @@ class TryoutController extends Controller
                     'komponen_text' => $item->komponen->pluck('nama_komponen')->join(', ') ?: '-',
                     'total_soal' => $item->total_soal ?? 0,
                     'status' => $item->status,
+                    'access_key' => $item->access_key,
                     'show_pembahasan' => (bool) $item->show_pembahasan,
                     'pembuat' => $item->pembuat->name ?? '-',
                     'mulai' => $item->mulai,
@@ -70,6 +71,7 @@ class TryoutController extends Controller
             'mulai'         => $tryout->mulai,
             'selesai'       => $tryout->selesai,
             'status'        => $tryout->status,
+            'access_key'    => $tryout->access_key,
             'ketentuan_khusus' => $tryout->ketentuan_khusus,
             'pesan_selesai' => $tryout->pesan_selesai,
             'show_pembahasan' => (bool) $tryout->show_pembahasan,
@@ -86,6 +88,7 @@ class TryoutController extends Controller
             'komponen.*.durasi_menit' => 'required|integer|min:1',
             'mulai'        => 'required|date',
             'selesai'      => 'required|date',
+            'access_key'   => 'nullable|string|max:255',
             // 'status'       => 'required|in:draft,active,finished',
         ]);
             
@@ -96,6 +99,7 @@ class TryoutController extends Controller
             'durasi_menit' => $totalDurasi,
             'mulai'        => $data['mulai'],
             'selesai'      => $data['selesai'],
+            'access_key'   => $data['access_key'],
             // 'status'       => $data['status'],
             'created_by'   => $request->user()?->id,
         ]);
@@ -127,6 +131,7 @@ class TryoutController extends Controller
             'mulai'        => 'required|date',
             'selesai'      => 'required|date',
             'status'       => 'required|in:draft,active,finished',
+            'access_key'   => 'nullable|string|max:255',
             'ketentuan_khusus' => 'nullable|string',
             'pesan_selesai' => 'nullable|string'
         ]);
@@ -141,6 +146,7 @@ class TryoutController extends Controller
             'mulai'        => $data['mulai'],
             'selesai'      => $data['selesai'],
             'status'       => $data['status'],
+            'access_key'   => $data['access_key'],
             'created_by'   => $request->user()?->id,
             'ketentuan_khusus' => $data['ketentuan_khusus'],
             'pesan_selesai' => $data['pesan_selesai'],
