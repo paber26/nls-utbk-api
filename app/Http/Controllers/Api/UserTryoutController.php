@@ -75,15 +75,33 @@ class UserTryoutController extends Controller
                 'mulai' => $tryout->mulai,
                 'selesai' => $tryout->selesai,
                 'ketentuan_khusus' => $tryout->ketentuan_khusus,
+                'requires_access_key' => filled(trim((string) $tryout->access_key)),
             ]
         ]);
     }
 
-    public function start($id)
+    public function start(Request $request, $id)
     {
         $user = Auth::user();
 
         $tryout = Tryout::where('status', 'active')->findOrFail($id);
+        $storedAccessKey = trim((string) ($tryout->access_key ?? ''));
+
+        if ($storedAccessKey !== '') {
+            $submittedAccessKey = trim((string) $request->input('access_key', ''));
+
+            if ($submittedAccessKey === '') {
+                return response()->json([
+                    'message' => 'Tryout ini membutuhkan kunci akses. Masukkan kunci akses yang diberikan admin atau guru Anda.'
+                ], 422);
+            }
+
+            if ($submittedAccessKey !== $storedAccessKey) {
+                return response()->json([
+                    'message' => 'Kunci akses tidak valid. Periksa kembali atau hubungi admin/guru Anda.'
+                ], 422);
+            }
+        }
 
         $attempt = $tryout->attempts()
             ->where('user_id', $user->id)
@@ -1096,4 +1114,3 @@ class UserTryoutController extends Controller
         return 0.0;
     }
 }
-
