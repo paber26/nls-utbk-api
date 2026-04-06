@@ -107,7 +107,6 @@ class PesertaController extends Controller
             'kota' => $peserta->kota,
             'kecamatan' => $peserta->kecamatan,
             'role' => $peserta->role,
-            'is_event_registered' => $peserta->is_event_registered,
             'created_at' => $peserta->created_at,
             'sekolah' => $peserta->sekolah ? [
                 'id' => $peserta->sekolah->id,
@@ -146,7 +145,6 @@ class PesertaController extends Controller
             'password' => Hash::make($validated['whatsapp']),
             'role' => 'peserta',
             'is_active' => 1,
-            'is_event_registered' => 1,
         ]);
 
         return response()->json([
@@ -190,20 +188,6 @@ class PesertaController extends Controller
         }
     }
 
-    public function toggleEvent($id)
-    {
-        $user = User::findOrFail($id);
-
-        // Toggle nilai is_event_registered (0 ↔ 1)
-        $user->is_event_registered = $user->is_event_registered ? 0 : 1;
-        $user->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Status event berhasil diperbarui',
-            'is_event_registered' => $user->is_event_registered
-        ]);
-    }
 
     public function riwayatTryout($id)
     {

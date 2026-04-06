@@ -37,7 +37,6 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
-        'is_event_registered',
     ];
 
 

@@ -32,27 +32,12 @@ class UserProfilController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        // Cek apakah profil sudah lengkap untuk aktivasi
-        $isProfilLengkap = 
-            !empty($data['nama_lengkap']) &&
-            !empty($data['sekolah_id']) &&
-            !empty($data['kelas']) &&
-            !empty($data['provinsi']) &&
-            !empty($data['kota']) &&
-            !empty($data['kecamatan']) &&
-            !empty($data['whatsapp']) &&
-            !empty($data['minat']) && count($data['minat']) > 0;
-
-        if ($isProfilLengkap) {
-            $data['is_event_registered'] = 1;
-        }
 
         $user->update($data);
 
         return response()->json([
             'success' => true,
-            'message' => 'Profil peserta berhasil disimpan',
-            'is_event_registered' => $user->is_event_registered
+            'message' => 'Profil peserta berhasil disimpan'
         ]);
     }
 
