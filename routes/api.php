@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SekolahController;
 use App\Http\Controllers\Api\MonitoringTryoutController;
 use App\Http\Controllers\Api\LeaderboardController;
+use App\Http\Controllers\Api\CodeforcesController;
+use App\Http\Middleware\EnsureAdminRole;
 
 use App\Models\Sekolah;
 use App\Http\Controllers\Api\UserProfilController;
@@ -93,6 +95,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/peserta/{id}/riwayat', [PesertaController::class, 'riwayatTryout']);
     Route::delete('/peserta/{id}', [PesertaController::class, 'destroy']);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
+
+    Route::middleware(EnsureAdminRole::class)->prefix('codeforces')->group(function () {
+        Route::get('/health', [CodeforcesController::class, 'health']);
+        Route::get('/handles/{handle}', [CodeforcesController::class, 'userInfo']);
+        Route::get('/handles/{handle}/submissions', [CodeforcesController::class, 'userStatus']);
+        Route::get('/problems/resolve', [CodeforcesController::class, 'problemByUrl']);
+    });
+
+    Route::middleware(EnsureAdminRole::class)->prefix('cf-problems')->group(function () {
+        Route::get('/', [\App\Http\Controllers\CfProblemController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\CfProblemController::class, 'store']);
+        Route::delete('/{cfProblem}', [\App\Http\Controllers\CfProblemController::class, 'destroy']);
+    });
 
     Route::get('/banksoal', [BankSoalController::class, 'index']);
     Route::get('/banksoaltryout', [BankSoalController::class, 'listForTryout']);

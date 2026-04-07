@@ -41,4 +41,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'codeforces' => [
+        'base_url' => env('CF_API_BASE_URL', 'https://codeforces.com/api'),
+        'key' => env('CF_API_KEY'),
+        'secret' => env('CF_API_SECRET'),
+    ],
+
 ];
