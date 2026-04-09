@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
         'role' => $user->role,
         'profil_lengkap' => $profilLengkap,
         'is_event_registered' => $user->is_event_registered,
+        'cf_handle' => $user->cf_handle,
     ]);
 });
 
