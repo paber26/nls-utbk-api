@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CfProblem;
 use App\Models\UserCfSubmission;
+use App\Models\UserCpScore;
 use App\Services\CodeforcesService;
 
 class UserCodeforcesController extends Controller
@@ -143,6 +144,9 @@ class UserCodeforcesController extends Controller
             }
 
             if ($solved) {
+                // Update aggregate score
+                $this->updateAggregateScore($user);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Sukses! Solusi Anda telah diverifikasi benar oleh Codeforces.',
@@ -183,6 +187,12 @@ class UserCodeforcesController extends Controller
             // Jika valid, simpan ke database
             $user->update(['cf_handle' => $handle]);
 
+            // Update/Create CP Score entry
+            UserCpScore::updateOrCreate(
+                ['user_id' => $user->id],
+                ['cf_handle' => $handle]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Akun Codeforces berhasil ditautkan!',
@@ -193,8 +203,58 @@ class UserCodeforcesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Username Codeforces tidak ditemukan. Pastikan Anda sudah mendaftar di codeforces.com.'
+                'message' => $e->getMessage()
             ], 422);
         }
+    }
+
+    /**
+     * Ambil daftar peringkat pengerjaan CP
+     */
+    public function leaderboard()
+    {
+        $scores = UserCpScore::with('user:id,nama_lengkap,sekolah_nama,avatar')
+            ->orderBy('total_points', 'desc')
+            ->orderBy('solved_count', 'desc')
+            ->limit(50)
+            ->get();
+
+        $data = $scores->map(function ($score, $index) {
+            return [
+                'rank' => $index + 1,
+                'user_id' => $score->user_id,
+                'name' => $score->user->nama_lengkap ?? 'Anonymous',
+                'school' => $score->user->sekolah_nama ?? '-',
+                'avatar' => $score->user->avatar,
+                'cf_handle' => $score->cf_handle,
+                'total_points' => $score->total_points,
+                'solved_count' => $score->solved_count,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Helper untuk menghitung ulang total poin user
+     */
+    private function updateAggregateScore($user)
+    {
+        $stats = UserCfSubmission::where('user_id', $user->id)
+            ->where('verdict', 'OK')
+            ->selectRaw('SUM(points) as total_points, COUNT(DISTINCT cf_problem_id) as solved_count')
+            ->first();
+
+        UserCpScore::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'cf_handle' => $user->cf_handle,
+                'total_points' => $stats->total_points ?? 0,
+                'solved_count' => $stats->solved_count ?? 0,
+            ]
+        );
     }
 }

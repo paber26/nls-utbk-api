@@ -39,7 +39,7 @@ class CodeforcesService
         $result = $this->request('user.info', [
             'handles' => $handle,
             'checkHistoricHandles' => 'true',
-        ]);
+        ], false); // handles=... should be public
 
         return $result[0] ?? [];
     }
@@ -50,12 +50,12 @@ class CodeforcesService
             'handle' => $handle,
             'from' => 1,
             'count' => max(1, min($count, 100)),
-        ]);
+        ], false); // user.status is also public
     }
 
     public function getProblemByContestAndIndex(int $contestId, string $index): array
     {
-        $result = $this->request('problemset.problems');
+        $result = $this->request('problemset.problems', [], false); // problemset is public
         $problems = $result['problems'] ?? [];
         $statistics = $result['problemStatistics'] ?? [];
 
@@ -122,19 +122,24 @@ class CodeforcesService
         return $statementHtml;
     }
 
-    private function request(string $method, array $params = []): array
+    private function request(string $method, array $params = [], bool $signed = true): array
     {
-        $this->assertConfigured();
-
-        $queryParams = $this->signParameters($method, $params);
-        $queryString = $this->buildQueryString($queryParams);
+        if ($signed) {
+            $this->assertConfigured();
+            $queryParams = $this->signParameters($method, $params);
+            $queryString = $this->buildQueryString($queryParams);
+        } else {
+            $queryString = $this->buildQueryString($params);
+        }
 
         $response = Http::acceptJson()
             ->timeout(15)
             ->get("{$this->baseUrl}/{$method}?{$queryString}");
 
         if ($response->failed()) {
-            throw new RuntimeException('Gagal menghubungi Codeforces API.');
+            $errorData = $response->json();
+            $message = $errorData['comment'] ?? 'Gagal menghubungi Codeforces API.';
+            throw new RuntimeException($message);
         }
 
         $payload = $response->json();
