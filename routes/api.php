@@ -109,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [\App\Http\Controllers\CfProblemController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\CfProblemController::class, 'store']);
         Route::get('/{cfProblem}/statement', [\App\Http\Controllers\CfProblemController::class, 'statement']);
+        Route::put('/{cfProblem}', [\App\Http\Controllers\CfProblemController::class, 'update']);
         Route::delete('/{cfProblem}', [\App\Http\Controllers\CfProblemController::class, 'destroy']);
     });
 

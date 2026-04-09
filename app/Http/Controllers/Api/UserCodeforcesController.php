@@ -17,10 +17,10 @@ class UserCodeforcesController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         // Dapatkan semua masalah Codeforces (Opsional: difilter berdasar mapel jika perlu)
         $problems = CfProblem::with('mapel')->orderBy('cf_contest_id', 'desc')->orderBy('cf_index', 'asc')->get();
-        
+
         // Ambil data status submission user yang sudah solved
         $solvedIds = UserCfSubmission::where('user_id', $user->id)
             ->where('verdict', 'OK')
@@ -53,9 +53,9 @@ class UserCodeforcesController extends Controller
     public function show($id, CodeforcesService $cfService)
     {
         $problem = CfProblem::with('mapel')->findOrFail($id);
-        
+
         $statementHtml = $problem->statement_html;
-        
+
         // Jaga-jaga untuk soal lama yang belum punya cache HTML
         if (empty($statementHtml)) {
             try {
@@ -64,7 +64,8 @@ class UserCodeforcesController extends Controller
                     $problem->statement_html = $statementHtml;
                     $problem->save();
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         }
 
         return response()->json([
@@ -80,9 +81,9 @@ class UserCodeforcesController extends Controller
                 'points' => $problem->points,
                 'tags' => $problem->tags,
                 'is_solved' => \App\Models\UserCfSubmission::where('user_id', request()->user()->id)
-                                ->where('cf_problem_id', $problem->id)
-                                ->where('verdict', 'OK')
-                                ->exists()
+                    ->where('cf_problem_id', $problem->id)
+                    ->where('verdict', 'OK')
+                    ->exists()
             ]
         ]);
     }
@@ -126,12 +127,12 @@ class UserCodeforcesController extends Controller
 
         try {
             $submissions = $cfService->userStatus($user->cf_handle, 1, 20); // Ambil 20 submission terbari
-            
+
             $solved = false;
             foreach ($submissions as $sub) {
                 // Periksa apakah ini kontes dan index yang tepat
                 if ($sub['problem']['contestId'] == $problem->cf_contest_id && $sub['problem']['index'] == $problem->cf_index) {
-                    
+
                     // Simpan submission rate ke DB kita (meski gak OK agar terekod history)
                     UserCfSubmission::updateOrCreate(
                         ['cf_submission_id' => $sub['id']],

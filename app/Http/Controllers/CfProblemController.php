@@ -29,10 +29,12 @@ class CfProblemController extends Controller
             'points' => 'required|integer|min:0'
         ]);
         
+        $htmlFetched = false;
         try {
             $statementHtml = $codeforces->getProblemStatementHtml($validated['cf_contest_id'], $validated['cf_index']);
             if ($statementHtml) {
                 $validated['statement_html'] = $statementHtml;
+                $htmlFetched = true;
             }
         } catch (\Throwable $e) {}
 
@@ -45,10 +47,32 @@ class CfProblemController extends Controller
             $validated
         );
 
+        $message = 'Problem Codeforces berhasil disimpan.';
+        if (!$htmlFetched) {
+            $message = 'Problem disimpan, tapi Gagal mengambil deskripsi HTML otomatis karena diblokir Cloudflare Codeforces (Anti-Bot). Anda dapat mencoba pratinjau nanti.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Problem Codeforces berhasil disimpan.',
+            'message' => $message,
             'data' => $problem
+        ]);
+    }
+
+    public function update(Request $request, CfProblem $cfProblem): JsonResponse
+    {
+        $validated = $request->validate([
+            'statement_html' => 'nullable|string',
+            'mapel_id' => 'nullable|exists:mapel,id',
+            'points' => 'nullable|integer|min:0',
+        ]);
+
+        $cfProblem->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Problem Codeforces berhasil diperbarui.',
+            'data' => $cfProblem
         ]);
     }
 
