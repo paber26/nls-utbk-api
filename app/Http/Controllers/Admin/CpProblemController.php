@@ -11,7 +11,7 @@ class CpProblemController extends Controller
 {
     public function index()
     {
-        $problems = CpProblem::withCount('testCases')->get();
+        $problems = CpProblem::with(['testCases'])->withCount('testCases')->get();
         return response()->json(['success' => true, 'data' => $problems]);
     }
 
