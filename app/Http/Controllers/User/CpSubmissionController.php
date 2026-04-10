@@ -93,11 +93,15 @@ class CpSubmissionController extends Controller
     public function submissions(Request $request, $id)
     {
         $user = $request->user();
+        $showAll = filter_var($request->query('all', false), FILTER_VALIDATE_BOOLEAN);
         
-        $submissions = CpSubmission::where('user_id', $user->id)
-            ->where('problem_id', $id)
-            ->orderByDesc('created_at')
-            ->get(['id', 'language_id', 'verdict', 'execution_time', 'memory_used', 'created_at']);
+        $query = CpSubmission::where('problem_id', $id)->orderByDesc('created_at');
+        
+        if (!$showAll) {
+            $query->where('user_id', $user->id);
+        }
+
+        $submissions = $query->with('user:id,name,nama_lengkap')->get(['id', 'user_id', 'language_id', 'verdict', 'execution_time', 'memory_used', 'created_at']);
 
         // Format to map language id to name
         $languages = [
@@ -109,6 +113,7 @@ class CpSubmissionController extends Controller
         $data = $submissions->map(function ($sub) use ($languages) {
             return [
                 'id' => $sub->id,
+                'user' => $sub->user ? ($sub->user->cf_handle ?: $sub->user->name) : '-',
                 'language' => $languages[$sub->language_id] ?? 'Unknown',
                 'verdict' => $sub->verdict,
                 'execution_time' => $sub->execution_time,
