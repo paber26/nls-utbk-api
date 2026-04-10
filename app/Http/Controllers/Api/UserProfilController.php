@@ -34,6 +34,13 @@ class UserProfilController extends Controller
             $data['password'] = Hash::make($request->whatsapp);
         }
 
+        if (!empty($request->sekolah_id)) {
+            $sekolah = \App\Models\Sekolah::find($request->sekolah_id);
+            if ($sekolah) {
+                $data['sekolah_nama'] = $sekolah->nama;
+            }
+        }
+
         $user->update($data);
 
         return response()->json([
@@ -74,9 +81,8 @@ class UserProfilController extends Controller
             'provinsi' => 'required|string',
             'kota' => 'required|string',
             'kecamatan' => 'required|string',
+            'sekolah_id' => 'required',
         ]);
-
-
 
         $updateData = [
             'nama_lengkap' => $request->nama_lengkap,
@@ -85,7 +91,15 @@ class UserProfilController extends Controller
             'provinsi' => $request->provinsi,
             'kota' => $request->kota,
             'kecamatan' => $request->kecamatan,
+            'sekolah_id' => $request->sekolah_id,
         ];
+
+        if (!empty($request->sekolah_id)) {
+            $sekolah = \App\Models\Sekolah::find($request->sekolah_id);
+            if ($sekolah) {
+                $updateData['sekolah_nama'] = $sekolah->nama;
+            }
+        }
 
         if (empty($user->password) && $request->filled('whatsapp')) {
             $updateData['password'] = Hash::make($request->whatsapp);
