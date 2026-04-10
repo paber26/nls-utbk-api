@@ -90,6 +90,36 @@ class CpSubmissionController extends Controller
         return response()->json(['data' => $problem]);
     }
 
+    public function submissions(Request $request, $id)
+    {
+        $user = $request->user();
+        
+        $submissions = CpSubmission::where('user_id', $user->id)
+            ->where('problem_id', $id)
+            ->orderByDesc('created_at')
+            ->get(['id', 'language_id', 'verdict', 'execution_time', 'memory_used', 'created_at']);
+
+        // Format to map language id to name
+        $languages = [
+            54 => 'C++',
+            71 => 'Python',
+            62 => 'Java'
+        ];
+
+        $data = $submissions->map(function ($sub) use ($languages) {
+            return [
+                'id' => $sub->id,
+                'language' => $languages[$sub->language_id] ?? 'Unknown',
+                'verdict' => $sub->verdict,
+                'execution_time' => $sub->execution_time,
+                'memory_used' => $sub->memory_used,
+                'created_at' => $sub->created_at->diffForHumans()
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
     public function submitCode(Request $request, $problemId)
     {
         $request->validate([

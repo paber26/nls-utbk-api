@@ -176,6 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Competitive Programming endpoints (Native IDE)
     Route::get('/user/cp/problems/{id}', [\App\Http\Controllers\User\CpSubmissionController::class, 'getProblem']);
+    Route::get('/user/cp/problems/{id}/submissions', [\App\Http\Controllers\User\CpSubmissionController::class, 'submissions']);
     Route::post('/user/cp/problems/{id}/submit', [\App\Http\Controllers\User\CpSubmissionController::class, 'submitCode']);
     
     Route::get('/user/cp/packages', [\App\Http\Controllers\User\CpSubmissionController::class, 'packages']);
