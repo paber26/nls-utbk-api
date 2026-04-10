@@ -8,10 +8,8 @@ return [
     'allowed_origins' => [
         'http://localhost:5173',
         'http://localhost:5174',
-        'https://snbt.next-level-study.com',
         'https://osn.next-level-study.com',
         'https://kuy.next-level-study.com',
-        'https://kuysnbt.next-level-study.com',
     ],
 
     'allowed_origins_patterns' => [],
