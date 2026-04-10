@@ -26,7 +26,6 @@ class UserProfilController extends Controller
             'kecamatan'    => $request->kecamatan,
             'whatsapp'     => $request->whatsapp,
             'minat'        => $request->minat,
-            'cf_handle'    => $request->cf_handle,
         ];
 
         if ($request->filled('password')) {
@@ -61,7 +60,6 @@ class UserProfilController extends Controller
             'kota' => $user->kota,
             'kecamatan' => $user->kecamatan,
             'minat' => $user->minat,
-            'cf_handle' => $user->cf_handle,
         ]);
     }
 
@@ -76,21 +74,9 @@ class UserProfilController extends Controller
             'provinsi' => 'required|string',
             'kota' => 'required|string',
             'kecamatan' => 'required|string',
-            'cf_handle' => 'nullable|string|max:64',
         ]);
 
-        // Codeforces Handle Validation
-        if ($request->filled('cf_handle') && $request->cf_handle !== $user->cf_handle) {
-            try {
-                $cfService = app(\App\Services\CodeforcesService::class);
-                $cfService->getUserInfo($request->cf_handle);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Username Codeforces tidak valid atau tidak ditemukan.'
-                ], 422);
-            }
-        }
+
 
         $updateData = [
             'nama_lengkap' => $request->nama_lengkap,
@@ -99,7 +85,6 @@ class UserProfilController extends Controller
             'provinsi' => $request->provinsi,
             'kota' => $request->kota,
             'kecamatan' => $request->kecamatan,
-            'cf_handle' => $request->cf_handle,
         ];
 
         if (empty($user->password) && $request->filled('whatsapp')) {

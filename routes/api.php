@@ -13,14 +13,12 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SekolahController;
 use App\Http\Controllers\Api\MonitoringTryoutController;
 use App\Http\Controllers\Api\LeaderboardController;
-use App\Http\Controllers\Api\CodeforcesController;
 use App\Http\Middleware\EnsureAdminRole;
 
 use App\Models\Sekolah;
 use App\Http\Controllers\Api\UserProfilController;
 use App\Http\Controllers\Api\UserTryoutController;
 use App\Http\Controllers\Api\PesertaController;
-use App\Http\Controllers\Api\UserCodeforcesController;
 use App\Http\Controllers\Api\CpTryoutPackageController;
 // use app/Http/Controllers/api/AuthController.php
 use Illuminate\Http\Request;
@@ -72,7 +70,6 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
         'role' => $user->role,
         'profil_lengkap' => $profilLengkap,
         'is_event_registered' => $user->is_event_registered,
-        'cf_handle' => $user->cf_handle,
     ]);
 });
 
@@ -94,13 +91,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/peserta/{id}/riwayat', [PesertaController::class, 'riwayatTryout']);
     Route::delete('/peserta/{id}', [PesertaController::class, 'destroy']);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
-
-    Route::middleware(EnsureAdminRole::class)->prefix('codeforces')->group(function () {
-        Route::get('/health', [CodeforcesController::class, 'health']);
-        Route::get('/handles/{handle}', [CodeforcesController::class, 'userInfo']);
-        Route::get('/handles/{handle}/submissions', [CodeforcesController::class, 'userStatus']);
-        Route::get('/problems/resolve', [CodeforcesController::class, 'problemByUrl']);
-    });
 
     Route::middleware(EnsureAdminRole::class)->prefix('cp-problems')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CpProblemController::class, 'index']);

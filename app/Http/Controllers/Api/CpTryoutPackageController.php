@@ -192,7 +192,6 @@ class CpTryoutPackageController extends Controller
                 'user_id' => $user->id,
                 'name' => $user->nama_lengkap ?: $user->name,
                 'school' => $user->sekolah_nama ?: '-',
-                'cf_handle' => $user->cf_handle,
                 'total_points' => $totalPoints,
                 'solved_count' => $solvedCount,
                 'attempted_count' => $attemptedProblems,

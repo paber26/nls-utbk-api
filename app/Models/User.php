@@ -37,7 +37,6 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
-        'cf_handle',
     ];
 
 
@@ -77,11 +76,6 @@ class User extends Authenticatable
     public function attempts()
     {
         return $this->hasMany(\App\Models\Attempt::class);
-    }
-
-    public function cfSubmissions()
-    {
-        return $this->hasMany(\App\Models\UserCfSubmission::class);
     }
 
     public function cpSubmissions()

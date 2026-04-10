@@ -114,7 +114,7 @@ class CpSubmissionController extends Controller
         $data = $submissions->map(function ($sub) use ($languages) {
             return [
                 'id' => $sub->id,
-                'user' => $sub->user ? ($sub->user->cf_handle ?: $sub->user->name) : '-',
+                'user' => $sub->user ? ($sub->user->nama_lengkap ?: $sub->user->name) : '-',
                 'language' => $languages[$sub->language_id] ?? 'Unknown',
                 'verdict' => $sub->verdict,
                 'execution_time' => $sub->execution_time,
