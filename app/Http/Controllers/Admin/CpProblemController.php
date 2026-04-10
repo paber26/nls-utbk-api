@@ -26,6 +26,8 @@ class CpProblemController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description_html' => 'nullable|string',
+            'input_format_html' => 'nullable|string',
+            'output_format_html' => 'nullable|string',
             'time_limit' => 'numeric|min:0.1',
             'memory_limit' => 'numeric|min:16',
             'points' => 'integer|min:0',
@@ -39,7 +41,7 @@ class CpProblemController extends Controller
         DB::beginTransaction();
         try {
             $problem = CpProblem::create($request->only([
-                'title', 'description_html', 'time_limit', 'memory_limit', 'points', 'komponen_id'
+                'title', 'description_html', 'input_format_html', 'output_format_html', 'time_limit', 'memory_limit', 'points', 'komponen_id'
             ]));
 
             if ($request->has('test_cases')) {
@@ -63,6 +65,8 @@ class CpProblemController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description_html' => 'nullable|string',
+            'input_format_html' => 'nullable|string',
+            'output_format_html' => 'nullable|string',
             'time_limit' => 'numeric|min:0.1',
             'memory_limit' => 'numeric|min:16',
             'points' => 'integer|min:0',
@@ -73,7 +77,7 @@ class CpProblemController extends Controller
         DB::beginTransaction();
         try {
             $problem->update($request->only([
-                'title', 'description_html', 'time_limit', 'memory_limit', 'points', 'komponen_id'
+                'title', 'description_html', 'input_format_html', 'output_format_html', 'time_limit', 'memory_limit', 'points', 'komponen_id'
             ]));
 
             if ($request->has('test_cases')) {
