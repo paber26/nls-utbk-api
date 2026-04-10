@@ -141,7 +141,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/upload-image', [UploadController::class, 'store']);
 
-
     // Route::get('/sekolah', function () {return \App\Models\Sekolah::orderBy('nama')->get();});
     // routes/api.php
     Route::get('/sekolah', [SekolahController::class, 'index']);
@@ -171,7 +170,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/cp/problems/{id}/submissions', [\App\Http\Controllers\User\CpSubmissionController::class, 'submissions']);
     Route::post('/user/cp/problems/{id}/submit', [\App\Http\Controllers\User\CpSubmissionController::class, 'submitCode']);
     Route::get('/user/cp/submissions/{id}', [\App\Http\Controllers\User\CpSubmissionController::class, 'show']);
-    
+
     Route::get('/user/cp/packages', [\App\Http\Controllers\User\CpSubmissionController::class, 'packages']);
     Route::get('/user/cp/packages/{id}/problems', [\App\Http\Controllers\User\CpSubmissionController::class, 'packageProblems']);
 });
