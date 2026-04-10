@@ -84,10 +84,8 @@ class CpSubmissionController extends Controller
 
     public function getProblem($id)
     {
-        // Get problem with sample test cases only
-        $problem = CpProblem::with(['testCases' => function ($query) {
-            $query->where('is_hidden', false);
-        }])->findOrFail($id);
+        // Get problem with all test cases (as requested by user to display input/output)
+        $problem = CpProblem::with('testCases')->findOrFail($id);
 
         return response()->json(['data' => $problem]);
     }
@@ -213,9 +211,12 @@ class CpSubmissionController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Terjadi kesalahan sistem',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Submission Gagal (Judge0 Offline/Error)',
+                'verdict' => 'System Error',
+                'execution_time' => 0,
+                'memory_used' => 0,
+                'error_detail' => $e->getMessage()
+            ], 200);
         }
     }
 }
