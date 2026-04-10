@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\CpTryoutPackage;
 use App\Models\User;
-use App\Models\UserCfSubmission;
+use App\Models\CpSubmission;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -97,7 +97,7 @@ class CpTryoutPackageController extends Controller
     {
         $validated = $request->validate([
             'problem_ids' => 'required|array',
-            'problem_ids.*' => 'required|uuid|exists:cf_problems,id',
+            'problem_ids.*' => 'required|integer|exists:cp_problems,id',
         ]);
 
         $package = CpTryoutPackage::findOrFail($id);
@@ -123,7 +123,7 @@ class CpTryoutPackageController extends Controller
     public function leaderboard(Request $request, int $id): JsonResponse
     {
         $package = CpTryoutPackage::with(['problems' => function ($q) {
-            $q->select('cf_problems.id', 'cf_contest_id', 'cf_index', 'name', 'points');
+            $q->select('cp_problems.id', 'title', 'points');
         }])->findOrFail($id);
 
         $problemIds = $package->problems->pluck('id')->values();
@@ -148,8 +148,8 @@ class CpTryoutPackageController extends Controller
             });
 
         if (!$includeAll) {
-            $participantsQuery->whereHas('cfSubmissions', function ($q) use ($problemIds) {
-                $q->whereIn('cf_problem_id', $problemIds);
+            $participantsQuery->whereHas('submissions', function ($q) use ($problemIds) {
+                $q->whereIn('problem_id', $problemIds);
             });
         }
 
@@ -166,17 +166,17 @@ class CpTryoutPackageController extends Controller
 
         $participantIds = $participants->pluck('id');
 
-        $submissionByProblem = UserCfSubmission::query()
+        $submissionByProblem = CpSubmission::query()
             ->whereIn('user_id', $participantIds)
-            ->whereIn('cf_problem_id', $problemIds)
+            ->whereIn('problem_id', $problemIds)
             ->select([
                 'user_id',
-                'cf_problem_id',
-                DB::raw('MAX(CASE WHEN verdict = "OK" THEN points ELSE 0 END) AS best_points'),
+                'problem_id',
+                DB::raw('MAX(CASE WHEN verdict = "Accepted" THEN 100 ELSE 0 END) AS best_points'), // Adjust scoring explicitly
                 DB::raw('MAX(created_at) AS last_submission_at'),
                 DB::raw('COUNT(*) AS attempt_count'),
             ])
-            ->groupBy('user_id', 'cf_problem_id')
+            ->groupBy('user_id', 'problem_id')
             ->get()
             ->groupBy('user_id');
 
@@ -235,13 +235,10 @@ class CpTryoutPackageController extends Controller
             'creator:id,name',
             'problems' => function ($q) {
                 $q->select(
-                    'cf_problems.id',
-                    'cf_problems.mapel_id',
-                    'cf_problems.cf_contest_id',
-                    'cf_problems.cf_index',
-                    'cf_problems.name',
-                    'cf_problems.points',
-                    'cf_problems.rating'
+                    'cp_problems.id',
+                    'cp_problems.komponen_id',
+                    'cp_problems.title',
+                    'cp_problems.points'
                 );
             },
         ])->findOrFail($id);
@@ -257,11 +254,8 @@ class CpTryoutPackageController extends Controller
             'soal' => $package->problems->map(function ($problem) {
                 return [
                     'id' => $problem->id,
-                    'cf_contest_id' => $problem->cf_contest_id,
-                    'cf_index' => $problem->cf_index,
-                    'name' => $problem->name,
+                    'title' => $problem->title,
                     'points' => (int) ($problem->points ?? 0),
-                    'rating' => $problem->rating,
                     'urutan' => (int) ($problem->pivot?->urutan ?? 0),
                 ];
             })->values(),

@@ -178,5 +178,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/cp/problems/{id}', [\App\Http\Controllers\User\CpSubmissionController::class, 'getProblem']);
     Route::post('/user/cp/problems/{id}/submit', [\App\Http\Controllers\User\CpSubmissionController::class, 'submitCode']);
     
-    // (We leave package functionality unchanged for now, but commented out or pointing to empty endpoints until adapted)
+    Route::get('/user/cp/packages', [\App\Http\Controllers\User\CpSubmissionController::class, 'packages']);
+    Route::get('/user/cp/packages/{id}/problems', [\App\Http\Controllers\User\CpSubmissionController::class, 'packageProblems']);
 });

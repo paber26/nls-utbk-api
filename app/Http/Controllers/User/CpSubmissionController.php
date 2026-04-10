@@ -5,11 +5,83 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\CpProblem;
 use App\Models\CpSubmission;
+use App\Models\CpTryoutPackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class CpSubmissionController extends Controller
 {
+    public function packages()
+    {
+        $packages = CpTryoutPackage::query()
+            ->withCount('problems')
+            ->where('status', 'active')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'nama_paket' => $package->nama_paket,
+                    'durasi_menit' => (int) $package->durasi_menit,
+                    'jumlah_soal' => (int) $package->problems_count,
+                    'mulai' => $package->mulai,
+                    'selesai' => $package->selesai,
+                    'status' => $package->status,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $packages,
+        ]);
+    }
+
+    public function packageProblems(Request $request, $packageId)
+    {
+        $user = $request->user();
+
+        $package = CpTryoutPackage::query()
+            ->where('status', 'active')
+            ->with(['problems' => function ($query) {
+                $query->orderBy('cp_tryout_package_problems.urutan');
+            }])
+            ->findOrFail($packageId);
+
+        $problemIds = $package->problems->pluck('id')->all();
+
+        $solvedIds = [];
+        if (!empty($problemIds)) {
+            $solvedIds = CpSubmission::where('user_id', $user->id)
+                ->where('verdict', 'Accepted')
+                ->whereIn('problem_id', $problemIds)
+                ->pluck('problem_id')
+                ->toArray();
+        }
+
+        $problemsData = $package->problems->map(function ($problem) use ($solvedIds) {
+            return [
+                'id' => $problem->id,
+                'title' => $problem->title,
+                'points' => $problem->points,
+                'is_solved' => in_array($problem->id, $solvedIds),
+                'urutan' => (int) ($problem->pivot?->urutan ?? 0),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'package' => [
+                    'id' => $package->id,
+                    'nama_paket' => $package->nama_paket,
+                    'durasi_menit' => (int) $package->durasi_menit,
+                    'jumlah_soal' => (int) $package->problems->count(),
+                ],
+                'problems' => $problemsData,
+            ]
+        ]);
+    }
+
     public function getProblem($id)
     {
         // Get problem with sample test cases only

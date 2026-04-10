@@ -12,13 +12,13 @@ class CpProblemController extends Controller
     public function index()
     {
         $problems = CpProblem::withCount('testCases')->get();
-        return response()->json($problems);
+        return response()->json(['success' => true, 'data' => $problems]);
     }
 
     public function show($id)
     {
         $problem = CpProblem::with('testCases')->findOrFail($id);
-        return response()->json($problem);
+        return response()->json(['success' => true, 'data' => $problem]);
     }
 
     public function store(Request $request)

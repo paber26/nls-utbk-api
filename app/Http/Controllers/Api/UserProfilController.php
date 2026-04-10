@@ -31,8 +31,9 @@ class UserProfilController extends Controller
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
+        } elseif ($request->filled('whatsapp') && empty($user->password)) {
+            $data['password'] = Hash::make($request->whatsapp);
         }
-
 
         $user->update($data);
 
@@ -91,7 +92,7 @@ class UserProfilController extends Controller
             }
         }
 
-        $user->update([
+        $updateData = [
             'nama_lengkap' => $request->nama_lengkap,
             'kelas' => $request->kelas,
             'whatsapp' => $request->whatsapp,
@@ -99,7 +100,13 @@ class UserProfilController extends Controller
             'kota' => $request->kota,
             'kecamatan' => $request->kecamatan,
             'cf_handle' => $request->cf_handle,
-        ]);
+        ];
+
+        if (empty($user->password) && $request->filled('whatsapp')) {
+            $updateData['password'] = Hash::make($request->whatsapp);
+        }
+
+        $user->update($updateData);
 
         return response()->json([
             'success' => true,

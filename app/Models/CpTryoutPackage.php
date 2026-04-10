@@ -25,10 +25,10 @@ class CpTryoutPackage extends Model
     public function problems(): BelongsToMany
     {
         return $this->belongsToMany(
-            CfProblem::class,
+            CpProblem::class,
             'cp_tryout_package_problems',
             'cp_tryout_package_id',
-            'cf_problem_id'
+            'cp_problem_id'
         )->withPivot('urutan')->withTimestamps()->orderBy('cp_tryout_package_problems.urutan');
     }
 

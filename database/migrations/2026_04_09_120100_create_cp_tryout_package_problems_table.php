@@ -16,14 +16,14 @@ return new class extends Migration
             $table->foreignId('cp_tryout_package_id')
                 ->constrained('cp_tryout_packages')
                 ->cascadeOnDelete();
-            $table->foreignUuid('cf_problem_id')
-                ->constrained('cf_problems')
+            $table->foreignId('cp_problem_id')
+                ->constrained('cp_problems')
                 ->cascadeOnDelete();
             $table->unsignedInteger('urutan')->nullable();
             $table->timestamps();
 
             $table->unique(
-                ['cp_tryout_package_id', 'cf_problem_id'],
+                ['cp_tryout_package_id', 'cp_problem_id'],
                 'cp_tryout_package_problem_unique'
             );
         });
