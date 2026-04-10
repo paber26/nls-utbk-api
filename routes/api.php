@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     $profilLengkap =
         !empty($user->nama_lengkap) &&
         !empty($user->sekolah_id) &&
+        !empty($user->sekolah_nama) &&
         !empty($user->kelas) &&
         !empty($user->provinsi) &&
         !empty($user->kota) &&
