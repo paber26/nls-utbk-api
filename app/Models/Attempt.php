@@ -16,11 +16,13 @@ class Attempt extends Model
         'selesai',
         'status',
         'nilai',
+        'nilai_komponen',
     ];
 
     protected $casts = [
         'mulai' => 'datetime',
         'selesai' => 'datetime',
+        'nilai_komponen' => 'array',
     ];
 
     public function tryout()

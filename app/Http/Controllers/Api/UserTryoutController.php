@@ -691,7 +691,7 @@ class UserTryoutController extends Controller
             if (!$bankSoal)
                 continue;
 
-            $kId = $bankSoal->mapel_id;
+            $kId = $bankSoal->komponen_id;
 
             if (!isset($skorPeserta[$kId])) {
                 $skorPeserta[$kId] = 0;
@@ -779,24 +779,38 @@ class UserTryoutController extends Controller
             }
         }
 
-        // --- Rekapitulasi Nilai (Tanpa Konversi SNBT) ---
-        $totalSkorPeserta = 0;
+        // --- Konversi ke Skala Dasar SNBT per Mapel ---
+        $totalSemuaSkala = 0;
+        $jumlahMapel = count($maxSkor);
         $breakdown = [];
-        $mapels = \App\Models\Mapel::all()->keyBy('id');
+        $mapels = \Illuminate\Support\Facades\DB::table('komponen')->get()->keyBy('id');
 
         foreach ($maxSkor as $kId => $max) {
             $peserta = $skorPeserta[$kId] ?? 0;
-            $totalSkorPeserta += $peserta;
 
-            $namaMapel = isset($mapels[$kId]) ? $mapels[$kId]->nama : 'Lainnya';
+            if ($max > 0) {
+                $ratio = min($peserta / $max, 1.0);
+                $ratio = max($ratio, 0.0);
+                // Rumus: 200 + ((Skor Mentah Peserta / Max Skor Mentah Mapel) * 750)
+                $skalaIRT = 200 + ($ratio * 750);
+            } else {
+                $skalaIRT = 200;
+            }
+
+            $totalSemuaSkala += $skalaIRT;
+            $namaMapel = isset($mapels[$kId]) ? $mapels[$kId]->nama_komponen : 'Lainnya';
             $breakdown[] = [
                 'nama' => $namaMapel,
-                'skor' => round($peserta, 1)
+                'skor' => round($skalaIRT, 1)
             ];
         }
 
+        // Nilai akhir attempt adalah rata-rata skala mapel
+        $nilaiAkhir = $jumlahMapel > 0 ? ($totalSemuaSkala / $jumlahMapel) : 0;
+
         $attempt->update([
-            'nilai' => round($totalSkorPeserta, 2)
+            'nilai' => round($nilaiAkhir, 2),
+            'nilai_komponen' => $breakdown
         ]);
 
         return $breakdown;

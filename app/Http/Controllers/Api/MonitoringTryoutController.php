@@ -18,13 +18,13 @@ class MonitoringTryoutController extends Controller
     {
         // return 'oke';
         $tryouts = Tryout::select(
-                'tryout.id',
-                'tryout.paket',
-                'tryout.mulai',
-                'tryout.selesai',
-                'tryout.status',
-                'tryout.show_pembahasan'
-            )
+            'tryout.id',
+            'tryout.paket',
+            'tryout.mulai',
+            'tryout.selesai',
+            'tryout.status',
+            'tryout.show_pembahasan'
+        )
             ->withCount([
                 'attempts as total_peserta',
                 'attempts as sedang_mengerjakan' => function ($q) {
@@ -66,35 +66,59 @@ class MonitoringTryoutController extends Controller
             ],
         ]);
     }
-    
+
     public function show($id)
     {
         try {
-            $urutanByBanksoal = TryoutSoal::where('tryout_id', $id)
-                ->pluck('urutan', 'banksoal_id');
+            $soalInfoByBanksoal = TryoutSoal::join('banksoal', 'tryout_soal.banksoal_id', '=', 'banksoal.id')
+                ->join('komponen', 'banksoal.komponen_id', '=', 'komponen.id')
+                ->where('tryout_soal.tryout_id', $id)
+                ->select(
+                    'tryout_soal.banksoal_id',
+                    'tryout_soal.urutan',
+                    'komponen.nama_komponen as mapel_nama'
+                )
+                ->get()
+                ->keyBy('banksoal_id');
 
             $participants = Attempt::with([
-                    'user:id,name,email,whatsapp,sekolah_id,sekolah_nama',
-                    'user.sekolah:id,nama',
-                    'jawabanPeserta:id,attempt_id,banksoal_id'
-                ])
+                'user:id,name,email,whatsapp,sekolah_id,sekolah_nama',
+                'user.sekolah:id,nama',
+                'jawabanPeserta:id,attempt_id,banksoal_id'
+            ])
                 ->withCount([
                     'jawabanPeserta as jawaban_count'
                 ])
                 ->where('tryout_id', $id)
                 ->orderByDesc('created_at')
                 ->get()
-                ->map(function ($attempt) use ($urutanByBanksoal) {
+                ->map(function ($attempt) use ($soalInfoByBanksoal) {
                     $user = $attempt->user;
                     $sekolahNama = $user?->sekolah?->nama ?? $user?->sekolah_nama ?? '-';
 
-                    $answeredNumbers = $attempt->jawabanPeserta
+                    $answeredRaw = $attempt->jawabanPeserta
                         ->pluck('banksoal_id')
-                        ->map(fn ($banksoalId) => $urutanByBanksoal->get($banksoalId))
-                        ->filter(fn ($urutan) => $urutan !== null)
-                        ->unique()
-                        ->sort()
+                        ->map(function ($banksoalId) use ($soalInfoByBanksoal) {
+                            $info = $soalInfoByBanksoal->get($banksoalId);
+                            if ($info) {
+                                return [
+                                    'num' => $info->urutan,
+                                    'komponen' => $info->mapel_nama
+                                ];
+                            }
+                            return null;
+                        })
+                        ->filter()
+                        ->unique('num')
+                        ->sortBy('num')
                         ->values();
+
+                    $answeredNumbersGroups = $answeredRaw->groupBy('komponen')->map(function ($items, $mapel) {
+                        return [
+                            'komponen' => $mapel,
+                            'numbers' => $items->pluck('num')->toArray(),
+                        ];
+                    })->values()->toArray();
 
                     return [
                         'id' => $attempt->id,
@@ -107,7 +131,7 @@ class MonitoringTryoutController extends Controller
                         'mulai' => $attempt->mulai,
                         'selesai' => $attempt->selesai,
                         'jawaban_count' => $attempt->jawaban_count ?? 0,
-                        'answered_numbers' => $answeredNumbers,
+                        'answered_numbers' => $answeredNumbersGroups,
                     ];
                 });
 
@@ -146,7 +170,7 @@ class MonitoringTryoutController extends Controller
         }
 
         $attempt->update([
-            'status'  => 'submitted',
+            'status' => 'submitted',
             'selesai' => $selesai,
         ]);
 
@@ -169,17 +193,17 @@ class MonitoringTryoutController extends Controller
         }
 
         $attempt = Attempt::with([
-                'user:id,name,email,sekolah_nama',
-                'tryout:id,paket',
-                'jawabanPeserta:id,attempt_id,banksoal_id,jawaban,is_correct'
-            ])
+            'user:id,name,email,sekolah_nama',
+            'tryout:id,paket',
+            'jawabanPeserta:id,attempt_id,banksoal_id,jawaban,is_correct'
+        ])
             ->where('tryout_id', $tryoutId)
             ->where(function ($q) use ($participantId) {
                 // Support kedua format participantId:
                 // 1) attempt.id (dari endpoint monitoring existing)
                 // 2) user.id (jika frontend kirim id user)
                 $q->where('id', $participantId)
-                  ->orWhere('user_id', $participantId);
+                    ->orWhere('user_id', $participantId);
             })
             ->orderByDesc('selesai')
             ->orderByDesc('mulai')
@@ -195,12 +219,21 @@ class MonitoringTryoutController extends Controller
 
         $jawabanBySoal = $attempt->jawabanPeserta->keyBy('banksoal_id');
 
-        $soalTryout = TryoutSoal::with(['banksoal' => function ($q) {
+        $soalTryout = TryoutSoal::with([
+            'banksoal' => function ($q) {
                 $q->select('id', 'pertanyaan', 'pembahasan', 'jawaban', 'tipe');
-            }])
+            }
+        ])
             ->where('tryout_id', $tryoutId)
             ->orderBy('urutan')
             ->get();
+
+        $soalInfoByBanksoal = TryoutSoal::join('banksoal', 'tryout_soal.banksoal_id', '=', 'banksoal.id')
+            ->join('komponen', 'banksoal.komponen_id', '=', 'komponen.id')
+            ->where('tryout_soal.tryout_id', $tryoutId)
+            ->select('tryout_soal.banksoal_id', 'komponen.nama_komponen as mapel_nama')
+            ->get()
+            ->keyBy('banksoal_id');
 
         $answers = [];
         $benar = 0;
@@ -210,7 +243,7 @@ class MonitoringTryoutController extends Controller
 
         foreach ($soalTryout as $index => $tryoutSoal) {
             $bankSoal = $tryoutSoal->banksoal;
-            if (! $bankSoal) {
+            if (!$bankSoal) {
                 continue;
             }
 
@@ -221,7 +254,7 @@ class MonitoringTryoutController extends Controller
             $kunciJawaban = $this->resolveKunciJawaban($bankSoal->id, $bankSoal->tipe, $bankSoal->jawaban);
             $opsi = $this->resolveOpsiSoal($bankSoal->id, $bankSoal->tipe);
 
-            if (! $jawaban || $jawaban->is_correct === null || $this->isJawabanKosong($jawabanUserRaw)) {
+            if (!$jawaban || $jawaban->is_correct === null || $this->isJawabanKosong($jawabanUserRaw)) {
                 $kosong++;
             } elseif ((int) $jawaban->is_correct === 1) {
                 $benar++;
@@ -238,10 +271,12 @@ class MonitoringTryoutController extends Controller
             );
 
             $totalPoin += $poinDiperoleh;
+            $komponen = $soalInfoByBanksoal->get($bankSoal->id)?->mapel_nama ?? '-';
 
             $answers[] = [
                 'id' => $bankSoal->id,
                 'nomor' => $tryoutSoal->urutan ?? ($index + 1),
+                'komponen' => $komponen,
                 'soal' => $bankSoal->pertanyaan,
                 'opsi' => $opsi,
                 'jawaban_user' => $jawabanUser,
@@ -282,7 +317,7 @@ class MonitoringTryoutController extends Controller
 
     private function normalizeJawabanUser($jawabanUserRaw)
     {
-        if (! is_array($jawabanUserRaw)) {
+        if (!is_array($jawabanUserRaw)) {
             return $jawabanUserRaw;
         }
 
@@ -303,7 +338,7 @@ class MonitoringTryoutController extends Controller
 
     private function isJawabanKosong($jawabanUserRaw): bool
     {
-        if (! is_array($jawabanUserRaw)) {
+        if (!is_array($jawabanUserRaw)) {
             return $jawabanUserRaw === null || $jawabanUserRaw === '';
         }
 
@@ -396,7 +431,7 @@ class MonitoringTryoutController extends Controller
 
         if ($tipe === 'pg') {
             $label = $jawabanUser[0] ?? null;
-            if (! $label) {
+            if (!$label) {
                 return 0.0;
             }
 
