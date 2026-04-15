@@ -28,7 +28,7 @@ class TryoutSoalController extends Controller
                     'pertanyaan'    => $item->banksoal->pertanyaan,
                     'urutan'        => $item->urutan,
                     'poin'          => $item->poin,
-                    'mapel_nama' => $item->banksoal->mapel?->nama ?? '-'
+                    'komponen_nama' => $item->banksoal->mapel?->nama_komponen ?? '-'
                 ];
             });
 
@@ -99,7 +99,7 @@ class TryoutSoalController extends Controller
                     'urutan'        => $item->urutan,
                     'poin'          => $item->poin,
                     'pembahasan'    => $banksoal->pembahasan,
-                    'mapel_nama' => $banksoal->mapel?->nama ?? '-',
+                    'komponen_nama' => $banksoal->mapel?->nama_komponen ?? '-',
                 ];
 
                 // ======================

@@ -28,7 +28,11 @@ class BankSoal extends Model
 
     public function mapel()
     {
-        return $this->belongsTo(Mapel::class, 'mapel_id');
+        return $this->belongsTo(Mapel::class, 'komponen_id');
+    }
+    public function komponen()
+    {
+        return $this->belongsTo(Mapel::class, 'komponen_id');
     }
 
     public function opsiJawaban()

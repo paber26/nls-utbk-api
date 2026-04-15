@@ -9,12 +9,12 @@ class Mapel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mapel';
+    protected $table = 'komponen';
 
     protected $fillable = [
         'kode',
-        'nama',
-        'tingkat',
+        'nama_komponen',
+        'mata_uji',
     ];
 
     public $timestamps = true; // karena ada created_at

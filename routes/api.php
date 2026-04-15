@@ -45,6 +45,7 @@ Route::get('/user', function (Request $request) {
 
 
 
+Route::get('/debug-db', function() { return response()->json(\App\Models\Attempt::whereNotNull("nilai_komponen")->first()); });
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     $user = $request->user();
 
@@ -86,7 +87,14 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('banksoal', BankSoalController::class);
     Route::get('/mapel', function () {
-        return Mapel::select('id', 'kode', 'nama', 'tingkat')->orderBy('id')->get();
+        return \Illuminate\Support\Facades\DB::table('komponen')
+            ->select('id', 'kode', 'nama_komponen as nama', 'mata_uji as tingkat')
+            ->orderBy('id')->get();
+    });
+    Route::get('/komponen', function () {
+        return \Illuminate\Support\Facades\DB::table('komponen')
+            ->select('id', 'kode', 'nama_komponen as nama', 'mata_uji as tingkat', 'nama_komponen', 'mata_uji')
+            ->orderBy('id')->get();
     });
 
     Route::get('/users', [UserController::class, 'index']);
